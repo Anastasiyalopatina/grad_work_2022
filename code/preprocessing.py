@@ -32,7 +32,7 @@ def text_cleaning (df, lang):
 
         # stop words removing
         STOPWORDS = set(stopwords.words(lang))
-        sentence = ' '.join([x for x in sentence.split() if x not in STOPWORDS])
+        sentence = ' '.join([x for x in sentence.split() if (x not in STOPWORDS) and (len(x) > 2)])
         sentence = sentence.strip()
 
         df[i] = sentence

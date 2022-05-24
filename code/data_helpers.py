@@ -9,6 +9,8 @@ from sklearn.preprocessing import MultiLabelBinarizer
 from keras.preprocessing.sequence import pad_sequences
 from visualization import word_cloud_show, distrubution_show, word_cloud_by_classes_show
 import pickle
+import os.path 
+from os import path
 
 mb = MultiLabelBinarizer()
 loader = None
@@ -33,10 +35,31 @@ def get_process_data (X, data_type, mode, lang):
             os.makedirs(label_dir_save_path)
         y_test.to_csv(os.path.join(os.path.dirname(__file__), '../resources', 'y_test.csv'))
 
-        X_train = preprocessing_data(X_train, lang)
-        X_test = preprocessing_data(X_test, lang)
+        if (path.exists(os.path.join(os.path.dirname(__file__), '../results', 'X_test_prep.csv'))):
+            print('Loading preprocessed data')
+            X_train = pd.read_csv(os.path.join(os.path.dirname(__file__), '../results', 'X_train_prep.csv')) 
+            X_test = pd.read_csv(os.path.join(os.path.dirname(__file__), '../results', 'X_test_prep.csv'))    
 
-        word_cloud_by_classes_show(X_train, y_train)
+        else:
+            X_train = pd.DataFrame(preprocessing_data(X_train, lang))
+            X_test = pd.DataFrame(preprocessing_data(X_test, lang))
+            
+            prep_dir_save_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'results')
+            if not os.path.exists(prep_dir_save_path):
+                os.makedirs(prep_dir_save_path)
+
+            X_train.to_csv(os.path.join(os.path.dirname(__file__), '../results', 'X_train_prep.csv'))
+            X_test.to_csv(os.path.join(os.path.dirname(__file__), '../results', 'X_test_prep.csv'))
+            
+        #word_cloud_by_classes_show(X_train, y_train)
+
+        train_drop = X_train[X_train['Letter'].apply(lambda x: len(x) < 3 if type(x) == list else len(x.split()) < 3)].index
+        X_train = X_train.drop(train_drop).reset_index()
+        y_train = y_train.drop(train_drop).reset_index()
+        
+        test_drop = X_test[X_test['Letter'].apply(lambda x: len(x) < 3 if type(x) == list else len(x.split()) < 3)].index
+        X_test = X_test.drop(test_drop).reset_index()
+        y_test = y_test.drop(test_drop).reset_index()
 
         y_train = pd.get_dummies(y_train)
         y_test = pd.get_dummies(y_test)
